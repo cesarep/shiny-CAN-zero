@@ -14,6 +14,10 @@ shinyServer(function(input, output, session) {
       if(!is.null(query$fx)) updateTextInput(session, 'fx', value = query$fx)
    })
    
+   # output$rv <- renderPrint(
+   #    print(rv$k)
+   # )
+   
    #define funções
    fTest <- function(x) {}
    observeEvent(input$fx, {
@@ -38,16 +42,26 @@ shinyServer(function(input, output, session) {
    })
    
    #se encarrega do zoom no plot
-   #delta = raiz-intervalo [vetor com as duas distancias dos intervalos até raizes]
-   #intervalo zoom = intervalo + delta*zoom(k)
-   # Im(zoom)=(-∞,1) tal que
-   # zoom=0 sem zoom
-   # zoom→1 intervalo→raiz
-   # zoom<0 afastando do intervalo
-   zoom = function(x) 1-exp(-x/5) 
    observeEvent(input$zoom, {
       rv$k <- rv$k-input$zoom$dir
    })
+   #delta = raiz-intervalo [vetor com as duas distancias dos intervalos até raizes]
+   #zoom com centralizador
+   #intervalo zoom = raiz - delta*zoom*centr
+   zoom = function(k) exp(-k/5)
+   #Im(zoom) = (0,+∞) tal que
+   #zoom→0 intervalo→raiz
+   #zoom=1 sem zoom
+   #zoom>1 afastado
+   centr = function(x, d) {
+      D = sum(abs(d))/2
+      dm = abs(d)
+      (1-D/dm)*exp(-abs(x)*D/(5*dm))+D/dm
+   }
+   #Im(centr)= (1/delta, 1)
+   #centr=1 sem centralizar
+   #centr=||delta||/delta raiz centralizada
+   
    
    #plotagem da função
    #é acionado por mudanças em fx, no intervalo de plotagem e pelo botao plotar
@@ -55,10 +69,10 @@ shinyServer(function(input, output, session) {
    observeEvent({input$intervalo; input$plotar; rv$fx}, {
       updateTabsetPanel(session, "Abas", 'aba1')
       rv$modo <- 0
-      rv$k <- 1 #reseta zoom
+      rv$k <- 0 #reseta zoom
    })
    observeEvent({input$calcular; rv$gx; input$x0; input$intInicial; input$metodo},{
-      rv$k <- 1 #reseta zoom
+      rv$k <- 0 #reseta zoom
    })
 
    #calcula os resultados
@@ -111,8 +125,12 @@ shinyServer(function(input, output, session) {
       f = rv$fx
       if(rv$modo == 0) 
          int = input$intervalo #zoom nao funciona no modo plotagem
-      else
-         int = input$intInicial + (rv$status$xf-input$intInicial)*zoom(rv$k)
+      else{
+         int0 = input$intInicial
+         deltaR = rv$status$xf-int0
+         int = rv$status$xf - deltaR*centr(rv$k, deltaR)*zoom(rv$k)
+         #int = input$intInicial + (rv$status$xf-input$intInicial)*zoom(rv$k)
+      }
          
       min = optimize(f, int, maximum = F)$objective
       max = optimize(f, int, maximum = T)$objective
@@ -150,7 +168,7 @@ shinyServer(function(input, output, session) {
             #it lin
             d = abs(rv$status$xf-val0['X'])
             int0 = range(pretty(tab[,'X']))
-            int = int0+(rv$status$xf-int0)*zoom(rv$k)
+            int = rv$status$xf-(rv$status$xf-int0)*zoom(rv$k)
             g = rv$gx
             curve(g, int[1], int[2], col='red')
             
@@ -183,12 +201,9 @@ shinyServer(function(input, output, session) {
             lines(c(val0['XE'], val0['XD']), c(val0['FXE'], val0['FXD']), lty=2, col='red')
             arrows(val0['XR'], 0, val0['XR'], val0['FXR'], 0.075, col='red')
             for(i in 2:n){
-               mi = (tab[i, 'FXD']-tab[i, 'FXE'])/(tab[i, 'XD']-tab[i, 'XE'])
-               mj = (tab[i-1, 'FXD']-tab[i-1, 'FXE'])/(tab[i-1, 'XD']-tab[i-1, 'XE'])
-               angulo = abs(mj-mi)
-               if(angulo > 0.5*2*pi/360){ #angulo maior que  grau
+               comp = (tab[i, 'XR']-tab[i-1, 'XR'])
+               if(abs(comp)*eX > 0.1){ #projeção maior que
                   lines(c(tab[i, 'XE'], tab[i, 'XD']), c(tab[i, 'FXE'], tab[i, 'FXD']), lty=2, col='red')
-                  #abline(tab[i, 'FXE']-tab[i, 'XE']*(tab[i, 'FXD']-tab[i, 'FXE'])/(tab[i, 'XD']-tab[i, 'XE']), (tab[i, 'FXD']-tab[i, 'FXE'])/(tab[i, 'XD']-tab[i, 'XE']))
                   if(abs(tab[i, 'FXR'])*eY > 0.075)
                      arrows(tab[i, 'XR'], 0, tab[i, 'XR'], tab[i, 'FXR'], 0.075, col='red')
                }

@@ -53,16 +53,14 @@ shinyUI(fluidPage(
                   event.preventDefault();
                   Shiny.setInputValue('zoom', {dir: event.deltaY/3, ts: event.timeStamp%10000})
                   "), #cuida do zoom no plot
-                  groupAddon(
-                       actionButton('afasta', '', icon('search-minus')),
-                       actionButton('aprox', '', icon('search-plus'))
+                  #groupAddon( #controlar animação
                        # actionButton('avança', '', icon('fast-backward', )),
                        # actionButton('avança2', '', icon('step-backward', )),
                        # actionButton('avança2', '', icon('play', )),
                        # actionButton('avança2', '', icon('pause', )),
                        # actionButton('avança2', '', icon('step-forward', )),
                        # actionButton('avança3', '', icon('fast-forward', ))
-                  ),
+                  #),
                   div(uiOutput('raiz'), style='text-align: center;')
                ),tabPanel("Resultados", value = "aba2",
                     uiOutput('tabela'),
