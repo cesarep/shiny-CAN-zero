@@ -131,7 +131,6 @@ shinyServer(function(input, output, session) {
          int = rv$status$xf - deltaR*centr(rv$k, deltaR)*zoom(rv$k)
          #int = input$intInicial + (rv$status$xf-input$intInicial)*zoom(rv$k)
       }
-         
       min = optimize(f, int, maximum = F)$objective
       max = optimize(f, int, maximum = T)$objective
       curve(f, int[1], int[2], ylim=range((c(min, max, 0))))
@@ -212,14 +211,21 @@ shinyServer(function(input, output, session) {
       }
    })
 
-   ### refazer imprime tabela
    observeEvent(rv$tabela, {
       if(!is.null(rv$status$s) && rv$status$s == TRUE){
          tabela = rv$tabela
+         #expandir/contrair tabela
+         if(nrow(tabela)>10)
+            modTab = list(pos=list(0, nrow(tabela)), 
+                          command=c(rv$status$cab, 
+                                    paste0("<tr id='tabexp'><td align='center' colspan='", ncol(tabela),"'></td></tr>")
+                                    )
+                          )
+         else
+            modTab = list(pos=list(0), command=rv$status$cab)
          output$tabela <- renderTable({
             rv$tabela
-            }, align='c', digits = 4, striped = T, include.colnames=FALSE, 
-      add.to.row = list(pos = list(0), command = rv$status$cab))
+            }, align='c', digits = 4, striped = T, include.colnames=FALSE, add.to.row = modTab)
          
          output$resultado <- renderUI(
             sprintf('$$f(%.*f)\\approx%.*f$$', 4, rv$status$xf, 4, rv$status$fxf)

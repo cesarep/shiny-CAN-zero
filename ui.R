@@ -15,6 +15,8 @@ groupAddon <- function(..., inputId=NULL, class=NULL, style=NULL){
 
 shinyUI(fluidPage(
       titlePanel("Métodos Numéricos para zeros de funções"),
+      includeScript('www/tabela.js'),
+      includeCSS('www/tabela.css'),
       KaTeX(),
       sidebarLayout(
          sidebarPanel(

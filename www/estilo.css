@@ -29,17 +29,3 @@
    width: auto;
    margin: 0 25px 0;
 }
-
-.escondido{
-	background-color: lightgray;
-	display: none;
-}
-.mais{
-   text-align: center;
-}
-.mais::before {
-	content: '▼'
-}
-.menos::before {
-	content: '▲'
-}
