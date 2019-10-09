@@ -183,6 +183,7 @@ shinyServer(function(input, output, session) {
                   arrows(tab[i, 'X'], tab[i, 'GX'], tab[i, 'GX'], tab[i, 'GX'], 0.05, col='darkgrey')
                }
             }
+            legend('left', legend = c(quote(g(x)), quote(x)), lty=c(1,1), col=c('red', 'blue'), inset = 0.05)
          },{
             #newt
             points(val0['X'], val0['FX'], pch=16)
@@ -215,14 +216,11 @@ shinyServer(function(input, output, session) {
       if(!is.null(rv$status$s) && rv$status$s == TRUE){
          tabela = rv$tabela
          #expandir/contrair tabela
-         if(nrow(tabela)>10)
-            modTab = list(pos=list(0, nrow(tabela)), 
-                          command=c(rv$status$cab, 
-                                    paste0("<tr id='tabexp'><td align='center' colspan='", ncol(tabela),"'></td></tr>")
-                                    )
-                          )
-         else
-            modTab = list(pos=list(0), command=rv$status$cab)
+         modTab = list(pos=list(0), command=rv$status$cab)
+         if(nrow(tabela)>10){
+         	modTab$pos[2] = nrow(tabela)
+         	modTab$command[2] = paste0("<tr id='tabexp'><td align='center' colspan='", ncol(tabela),"'></td></tr>")
+         }
          output$tabela <- renderTable({
             rv$tabela
             }, align='c', digits = 4, striped = T, include.colnames=FALSE, add.to.row = modTab)
